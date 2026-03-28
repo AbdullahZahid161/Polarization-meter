@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Political Polarization Meter</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --danger-gradient: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            --success-gradient: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+            --warning-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --neutral-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px 0;
+        }
+
+        .hero-section {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 3rem 0;
+            margin-bottom: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3);
+        }
+
+        .polarization-gauge {
+            width: 220px;
+            height: 220px;
+            margin: 0 auto;
+        }
+
+        .score-circle {
+            position: relative;
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            background: conic-gradient(
+                #ff6b6b 0deg, 
+                #ff6b6b calc(var(--score, 0) * 3.6deg), 
+                #e8ecef calc(var(--score, 0) * 3.6deg) 360deg
+            );
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 20px 40px rgba(255, 107, 107, 0.3);
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .score-circle::after {
+            content: '';
+            position: absolute;
+            width: 170px;
+            height: 170px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        .score-text {
+            position: relative;
+            font-size: 2.5rem;
+            font-weight: 700;
+            z-index: 2;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .score-label {
+            font-size: 1.1rem;
+            font-weight: 500;
+            opacity: 0.9;
+        }
+
+        .highlight-polarized {
+            background: linear-gradient(120deg, #ff9a9e 0%, #fecfef 100%);
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-weight: 600;
+            animation: highlightPulse 2s infinite;
+            box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+        }
+
+        @keyframes highlightPulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+        }
+
+        .result-card {
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .result-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.15);
+        }
+
+        .metric-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .metric-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .btn-analyze {
+            background: var(--primary-gradient);
+            border: none;
+            padding: 1rem 3rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-analyze:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.6);
+        }
+
+        #highlightedSpeech {
+            max-height: 400px;
+            overflow-y: auto;
+            font-size: 1.2em;
+            line-height: 1.8;
+            background: #f8f9ff;
+            padding: 2rem;
+            border-radius: 16px;
+            border-left: 5px solid #667eea;
+        }
+
+        .score-range {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            .score-circle {
+                width: 180px;
+                height: 180px;
+            }
+            .score-circle::after {
+                width: 140px;
+                height: 140px;
+            }
+            .score-text {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <h1 class="display-4 fw-bold mb-4">
+                        <i class="fas fa-balance-scale me-3"></i>
+                        Political Polarization Meter
+                    </h1>
+                    <p class="lead mb-0 fs-5">AI-powered analysis of "Us vs Them" language in political speeches</p>
+                    <small class="d-block mt-2 opacity-75">100% Client-side • Instant Results • Privacy Guaranteed</small>
+                </div>
+                <div class="col-lg-4 text-center">
+                    <div class="polarization-gauge score-circle mb-3" id="scoreCircle" style="--score: 0;">
+                        <div class="score-text" id="scoreText">0</div>
+                    </div>
+                    <div id="scoreLabel" class="score-label">Enter speech to analyze</div>
+                    <div class="score-range mt-2">
+                        <small><span class="text-success">0-25 Neutral</span> | 
+                        <span class="text-warning">26-50 Mild</span> | 
+                        <span class="text-danger">51-75 Polarized</span> | 
+                        <span class="text-danger fw-bold">76-100 Extreme</span></small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Input Section -->
+        <div class="row justify-content-center mb-5">
+            <div class="col-lg-10">
+                <div class="result-card">
+                    <div class="card-body p-5">
+                        <div class="row align-items-center">
+                            <div class="col-lg-8">
+                                <h3 class="mb-3">
+                                    <i class="fas fa-file-alt text-primary me-2"></i>
+                                    Enter Political Speech
+                                </h3>
+                                <p class="text-muted mb-3 fs-6">Paste speech transcript (max 10,000 words)</p>
+                                <textarea 
+                                    id="speechInput" 
+                                    class="form-control border-0 p-4 rounded-4 shadow-sm" 
+                                    rows="6"
+                                    placeholder="Paste political speech here...&#10;&#10;Example: 'My fellow Americans, we face threats from radical extremists who...'"
+                                    style="font-size: 1.1rem; resize: vertical; min-height: 150px;">
+                                </textarea>
+                            </div>
+                            <div class="col-lg-4">
+                                <button id="analyzeBtn" class="btn btn-analyze w-100 mb-3 p-4 fs-5">
+                                    <i class="fas fa-brain me-2"></i>
+                                    <span id="analyzeText">ANALYZE SPEECH</span>
+                                </button>
+                                <button id="clearBtn" class="btn btn-outline-secondary w-100 p-4">
+                                    <i class="fas fa-trash me-2"></i>Clear All
+                                </button>
+                                <div class="text-center mt-4">
+                                    <div class="progress mb-2" style="height: 4px; display: none;" id="progressBar">
+                                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"></div>
+                                    </div>
+                                    <small class="text-muted">
+                                        <i class="fas fa-shield-alt me-1"></i>
+                                        100% Private - No data sent to servers
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" style="display: none;">
+            <div class="row justify-content-center mb-5">
+                <div class="col-lg-10 text-center">
+                    <h2 class="display-6 fw-bold mb-4" id="scoreTitle">
+                        Analysis Complete!
+                    </h2>
+                </div>
+            </div>
+
+            <!-- Metrics Grid -->
+            <div class="row g-4 mb-5 justify-content-center">
+                <div class="col-md-3 col-sm-6">
+                    <div class="metric-card">
+                        <div class="metric-icon">
+                            <i class="fas fa-users-slash"></i>
+                        </div>
+                        <h4 id="usThemRatio" class="text-primary fw-bold fs-1 mb-1">-</h4>
+                        <p class="text-muted mb-0 fs-6">"Them" vs "Us" Ratio</p>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="metric-card">
+                        <div class="metric-icon text-danger">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <h4 id="keywordCount" class="text-danger fw-bold fs-1 mb-1">-</h4>
+                        <p class="text-muted mb-0 fs-6">Polarized Keywords</p>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="metric-card">
+                        <div class="metric-icon text-warning">
+                            <i class="fas fa-font"></i>
+                        </div>
+                        <h4 id="totalWords" class="text-warning fw-bold fs-1 mb-1">-</h4>
+                        <p class="text-muted mb-0 fs-6">Total Words</p>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="metric-card">
+                        <div class="metric-icon text-info">
+                            <i class="fas fa-percentage"></i>
+                        </div>
+                        <h4 id="density" class="text-info fw-bold fs-1 mb-1">-</h4>
+                        <p class="text-muted mb-0 fs-6">Polarization Density</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Highlighted Speech -->
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    <div class="result-card">
+                        <div class="card-header bg-gradient text-white p-4">
+                            <h5 class="mb-0 fw-bold">
+                                <i class="fas fa-highlight me-2"></i>
+                                Speech with Polarized Keywords Highlighted
+                            </h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div id="highlightedSpeech" class="p-0">
+                                Enter a speech to see highlights...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Breakdown -->
+            <div class="row justify-content-center mt-5">
+                <div class="col-lg-10">
+                    <div class="result-card">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0 fw-semibold">
+                                <i class="fas fa-chart-bar me-2 text-primary"></i>
+                                Detailed Breakdown
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center g-4">
+                                <div class="col-md-4">
+                                    <div class="metric-card p-4">
+                                        <i class="fas fa-handshake text-success fs-1 mb-3"></i>
+                                        <h4 id="usCount" class="text-success fw-bold fs-2 mb-1">-</h4>
+                                        <p class="fs-6 mb-0">"Us" Keywords</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="metric-card p-4">
+                                        <i class="fas fa-user-slash text-danger fs-1 mb-3"></i>
+                                        <h4 id="themCount" class="text-danger fw-bold fs-2 mb-1">-</h4>
+                                        <p class="fs-6 mb-0">"Them" Keywords</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="metric-card p-4">
+                                        <i class="fas fa-fire text-warning fs-1 mb-3"></i>
+                                        <h4 id="emotionalCount" class="text-warning fw-bold fs-2 mb-1">-</h4>
+                                        <p class="fs-6 mb-0">Emotional Triggers</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mt-4">
+                                <div class="col-12 text-center">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        <strong>Legend:</strong> 
+                                        <span class="highlight-polarized px-3 py-1 ms-2">Polarized Keywords</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+        <script>
+        class PolarizationAnalyzer {
+            constructor() {
+                this.polarizationKeywords = {
+                    us: ['we', 'our', 'us', 'america', 'american', 'people', 'citizens', 'patriots', 'workers', 'families', 'nation', 'country'],
+                    them: ['they', 'them', 'those', 'elites', 'globalists', 'socialists', 'communists', 'radical', 'extremists', 'corrupt', 'traitors', 'enemies', 'fake', 'dishonest', 'liars'],
+                    emotional: ['hate', 'fear', 'angry', 'disgusted', 'outraged', 'betrayed', 'attack', 'war', 'fight', 'destroy', 'kill'],
+                    tribal: ['real', 'true', 'only', 'best', 'worst', 'disaster', 'hoax', 'witch hunt', 'radical left', 'radical right', 'deep state']
+                };
+                
+                this.init();
+            }
+
+            init() {
+                document.getElementById('analyzeBtn').addEventListener('click', () => this.analyze());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clear());
+                document.getElementById('speechInput').addEventListener('input', () => this.updateWordCount());
+            }
+
+            analyze() {
+                const speech = document.getElementById('speechInput').value.trim();
+                if (!speech) {
+                    alert('⚠️ Please enter a speech first!');
+                    return;
+                }
+
+                this.showProgress();
+                
+                // Simulate analysis delay for realism
+                setTimeout(() => {
+                    const results = this.analyzeSpeech(speech);
+                    this.displayResults(results);
+                    this.hideProgress();
+                }, 1200);
+            }
+
+            analyzeSpeech(text) {
+                const words = text.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+                const totalWords = words.length;
+                
+                // Count polarized keywords
+                const counts = {
+                    us: 0, them: 0, emotional: 0, tribal: 0
+                };
+
+                words.forEach(word => {
+                    if (this.polarizationKeywords.us.some(kw => word.includes(kw))) counts.us++;
+                    if (this.polarizationKeywords.them.some(kw => word.includes(kw))) counts.them++;
+                    if (this.polarizationKeywords.emotional.some(kw => word.includes(kw))) counts.emotional++;
+                    if (this.polarizationKeywords.tribal.some(kw => word.includes(kw))) counts.tribal++;
+                });
+
+                const totalPolarized = counts.us + counts.them + counts.emotional + counts.tribal;
+                const usVsThemRatio = totalPolarized > 0 ? (counts.them / totalPolarized) * 100 : 0;
+                
+                // Calculate polarization score (0-100)
+                let score = 0;
+                score += (totalPolarized / totalWords) * 2000;  // Keyword density
+                score += usVsThemRatio;                        // Them bias
+                score += counts.emotional * 3;                 // Emotional multiplier
+                score += counts.tribal * 2;                    // Tribal multiplier
+                score = Math.min(Math.max(score, 0), 100);
+
+                return {
+                    polarization_score: Math.round(score),
+                    us_vs_them_ratio: Math.round(usVsThemRatio * 10) / 10,
+                    keyword_count: totalPolarized,
+                    total_words: totalWords,
+                    breakdown: counts,
+                    highlights: words.map((word, i) => ({
+                        word: word,
+                        position: i,
+                        isPolarized: Object.values(this.polarizationKeywords).some(cat => 
+                            cat.some(kw => word.includes(kw))
+                        )
+                    }))
+                };
+            }
+
+            displayResults(results) {
+                // Show results section
+                document.getElementById('resultsSection').style.display = 'block';
+                document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+
+                // Update score circle
+                document.documentElement.style.setProperty('--score', results.polarization_score);
+                document.getElementById('scoreText').textContent = results.polarization_score;
+                document.getElementById('scoreLabel').textContent = this.getScoreLabel(results.polarization_score);
+
+                // Update metrics
+                document.getElementById('usThemRatio').textContent = `${results.us_vs_them_ratio}%`;
+                document.getElementById('keywordCount').textContent = results.keyword_count;
+                document.getElementById('totalWords').textContent = results.total_words;
+                document.getElementById('density').textContent = `${((results.keyword_count/results.total_words)*100).toFixed(1)}%`;
+
+                // Breakdown
+                document.getElementById('usCount').textContent = results.breakdown.us;
+                document.getElementById('themCount').textContent = results.breakdown.them;
+                document.getElementById('emotionalCount').textContent = results.breakdown.emotional;
+
+                // Highlight speech
+                this.highlightSpeech(results.highlights, document.getElementById('speechInput').value);
+            }
+
+            highlightSpeech(highlights, originalText) {
+                const words = originalText.split(/\s+/);
+                let highlightedHTML = words.map((word, i) => {
+                    if (highlights[i] && highlights[i].isPolarized) {
+                        return `<span class="highlight-polarized me-1">${word}</span>`;
+                    }
+                    return `<span class="me-1">${word}</span>`;
+                }).join(' ');
+
+                document.getElementById('highlightedSpeech').innerHTML = highlightedHTML;
+            }
+
+            getScoreLabel(score) {
+                if (score <= 25) return '😐 Neutral';
+                if (score <= 50) return '⚠️ Mild Polarization';
+                if (score <= 75) return '🔥 Polarized';
+                return '💥 Extreme Polarization';
+            }
+
+            showProgress() {
+                document.getElementById('analyzeText').innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Analyzing...';
+                document.getElementById('analyzeBtn').disabled = true;
+                document.getElementById('progressBar').style.display = 'block';
+            }
+
+            hideProgress() {
+                document.getElementById('analyzeText').textContent = 'ANALYZE AGAIN';
+                document.getElementById('analyzeBtn').disabled = false;
+                document.getElementById('progressBar').style.display = 'none';
+            }
+
+            clear() {
+                document.getElementById('speechInput').value = '';
+                document.getElementById('resultsSection').style.display = 'none';
+                document.documentElement.style.setProperty('--score', '0');
+                document.getElementById('scoreText').textContent = '0';
+                document.getElementById('scoreLabel').textContent = 'Enter speech to analyze';
+                this.updateWordCount();
+            }
+
+            updateWordCount() {
+                const text = document.getElementById('speechInput').value;
+                const words = text.trim().split(/\s+/).filter(w => w.length > 0);
+                // You can add word count display here if needed
+            }
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new PolarizationAnalyzer();
+        });
+    </script>
+</body>
+</html>
